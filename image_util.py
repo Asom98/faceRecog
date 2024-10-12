@@ -41,13 +41,20 @@ def normalize_images(csv_filename: str, base_folder: str, target_folder: str):
 
         # Load and preprocess image
         try:
+            save_path = os.path.join(target_folder, path)
+
+            # Check if the file already exists
+            if os.path.exists(save_path):
+                print(f"Skipping {save_path} as it already normalized.")
+                continue
+
             cropped_image = Image.open(image_path).convert('RGB').resize((64, 64))
             normalized_image = np.array(cropped_image) / 255.0  # Normalize to [0, 1]
 
             # Save the image to the target folder
-            save_path = os.path.join(target_folder, path)
             if not os.path.exists(os.path.dirname(save_path)):
                 os.makedirs(os.path.dirname(save_path))
+
             cropped_image.save(save_path)
 
             images.append(normalized_image)
