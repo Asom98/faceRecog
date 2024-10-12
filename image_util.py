@@ -1,12 +1,11 @@
 import pandas as pd
-import numpy as np
 from PIL import Image
 import os
 import datetime
 
 
 # Load and preprocess dataset
-def normalize_images(csv_filename: str, base_folder: str, target_folder: str):
+def resize_images(csv_filename: str, base_folder: str, target_folder: str):
     """
     Load and preprocess dataset from a CSV file.
     1. remove Ahegao
@@ -20,10 +19,7 @@ def normalize_images(csv_filename: str, base_folder: str, target_folder: str):
         target_folder (str): Target folder where images will be saved after normalization.
     """
 
-    df = pd.read_csv(csv_filename)
-
-    # Remove "Ahegao" class if present
-    df = df[df['label'] != 'Ahegao']
+    df = _load_csv(csv_filename)
 
     # Initialize lists for images and labels
     images = []
@@ -31,9 +27,12 @@ def normalize_images(csv_filename: str, base_folder: str, target_folder: str):
 
     # stop watch log start time
     start_time = datetime.datetime.now()
+    print(r"Normalize images")
     print(f"Start time: {start_time}")
 
     # Iterate through CSV, load images, and resize them
+    skipped_count = 0
+    processed_count = 0
     for index, row in df.iterrows():
         path = row['path'].strip()
         image_path = os.path.join(base_folder, path)
@@ -45,21 +44,22 @@ def normalize_images(csv_filename: str, base_folder: str, target_folder: str):
 
             # Check if the file already exists
             if os.path.exists(save_path):
+                skipped_count += 1
                 print(f"Skipping {save_path} as it already normalized.")
                 continue
 
-            cropped_image = Image.open(image_path).convert('RGB').resize((64, 64))
-            normalized_image = np.array(cropped_image) / 255.0  # Normalize to [0, 1]
+            resized_image = Image.open(image_path).convert('RGB').resize((64, 64))
 
             # Save the image to the target folder
             if not os.path.exists(os.path.dirname(save_path)):
                 os.makedirs(os.path.dirname(save_path))
 
-            cropped_image.save(save_path)
+            resized_image.save(save_path)
 
-            images.append(normalized_image)
             labels.append(label)
+            processed_count += 1
         except (IOError, OSError) as e:
+            skipped_count += 1
             print(f"Skipping image {image_path} due to error: {e}")
             continue  # Skip corrupted or unreadable images
 
@@ -67,7 +67,57 @@ def normalize_images(csv_filename: str, base_folder: str, target_folder: str):
     end_time = datetime.datetime.now()
     print(f"End time: {end_time}")
     print(f"duration: {end_time - start_time}")
+    print(f"processed images: {processed_count}")
+    print(f"skipped images: {skipped_count}")
 
-    # save result in new folder
 
-    return np.array(images), np.array(labels)
+def grayscale_images(csv_filename: str, base_folder: str, target_folder: str):
+    df = _load_csv(csv_filename)
+
+    start_time = datetime.datetime.now()
+    print(r"RGB to Grayscale images")
+    print(f"Start time: {start_time}")
+
+    # Iterate through CSV, load images, and resize them
+    skipped_count = 0
+    processed_count = 0
+    for index, row in df.iterrows():
+        path = row['path'].strip()
+        image_path = os.path.join(base_folder, path)
+        label = row['label']
+
+        # Load and preprocess image
+        try:
+            save_path = os.path.join(target_folder, path)
+
+            # Check if the file already exists
+            if os.path.exists(save_path):
+                skipped_count += 1
+                print(f"Skipping {save_path} as it already normalized.")
+                continue
+
+            grayscale_image = Image.open(image_path).convert('L')
+
+            # Save the image to the target folder
+            if not os.path.exists(os.path.dirname(save_path)):
+                os.makedirs(os.path.dirname(save_path))
+
+            grayscale_image.save(save_path)
+            processed_count += 1
+        except (IOError, OSError) as e:
+            skipped_count += 1
+            print(f"Skipping image {image_path} due to error: {e}")
+            continue  # Skip corrupted or unreadable images
+
+    # stop watch log end time
+    end_time = datetime.datetime.now()
+    print(f"End time: {end_time}")
+    print(f"duration: {end_time - start_time}")
+    print(f"processed images: {processed_count}")
+    print(f"skipped images: {skipped_count}")
+
+
+def _load_csv(csv_filename: str):
+    df = pd.read_csv(csv_filename)
+    # Remove "Ahegao" class if present
+    return df[df['label'] != 'Ahegao']
