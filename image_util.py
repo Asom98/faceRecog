@@ -6,6 +6,7 @@ import datetime
 from numpy import ndarray
 from skimage.feature import hog
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 
 # Load and preprocess dataset
@@ -116,6 +117,11 @@ def to_histgram(images: ndarray) -> ndarray:
 def to_pca(images: ndarray, n_components: int = 100) -> ndarray:
     pca = PCA(n_components=n_components)
     return pca.fit_transform(images)
+
+
+def to_norm(features):
+    scaler = StandardScaler()
+    return scaler.fit_transform(features)
 
 
 def _load_csv(csv_filename: str):
