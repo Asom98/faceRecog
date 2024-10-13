@@ -5,10 +5,11 @@ import os
 import datetime
 from numpy import ndarray
 from skimage.feature import hog
+from sklearn.decomposition import PCA
 
 
 # Load and preprocess dataset
-def resize_and_save(csv_filename: str, base_folder: str, target_folder: str) -> None :
+def resize_and_save(csv_filename: str, base_folder: str, target_folder: str) -> None:
     """
     Load and preprocess dataset from a CSV file.
     1. remove Ahegao
@@ -103,12 +104,19 @@ def load_and_normalize(csv_filename: str, base_folder: str) -> tuple[ndarray, nd
 def to_grayscale(images: ndarray) -> ndarray:
     return np.dot(images[..., :3], [0.2989, 0.5870, 0.1140])
 
+
 def to_histgram(images: ndarray) -> ndarray:
     hog_features = []
     for img in images:
         features = hog(img, pixels_per_cell=(8, 8), cells_per_block=(2, 2), feature_vector=True)
         hog_features.append(features)
     return np.array(hog_features)
+
+
+def to_pca(images: ndarray, n_components: int = 100) -> ndarray:
+    pca = PCA(n_components=n_components)
+    return pca.fit_transform(images)
+
 
 def _load_csv(csv_filename: str):
     df = pd.read_csv(csv_filename)
