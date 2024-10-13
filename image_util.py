@@ -1,11 +1,14 @@
 import pandas as pd
+import numpy as np
 from PIL import Image
 import os
 import datetime
+from numpy import ndarray
+from skimage.feature import hog
 
 
 # Load and preprocess dataset
-def resize_images(csv_filename: str, base_folder: str, target_folder: str):
+def resize_and_save(csv_filename: str, base_folder: str, target_folder: str) -> None :
     """
     Load and preprocess dataset from a CSV file.
     1. remove Ahegao
@@ -21,10 +24,6 @@ def resize_images(csv_filename: str, base_folder: str, target_folder: str):
 
     df = _load_csv(csv_filename)
 
-    # Initialize lists for images and labels
-    images = []
-    labels = []
-
     # stop watch log start time
     start_time = datetime.datetime.now()
     print(r"Normalize images")
@@ -36,7 +35,6 @@ def resize_images(csv_filename: str, base_folder: str, target_folder: str):
     for index, row in df.iterrows():
         path = row['path'].strip()
         image_path = os.path.join(base_folder, path)
-        label = row['label']
 
         # Load and preprocess image
         try:
@@ -56,7 +54,6 @@ def resize_images(csv_filename: str, base_folder: str, target_folder: str):
 
             resized_image.save(save_path)
 
-            labels.append(label)
             processed_count += 1
         except (IOError, OSError) as e:
             skipped_count += 1
@@ -71,51 +68,47 @@ def resize_images(csv_filename: str, base_folder: str, target_folder: str):
     print(f"skipped images: {skipped_count}")
 
 
-def grayscale_images(csv_filename: str, base_folder: str, target_folder: str):
+def load_and_normalize(csv_filename: str, base_folder: str) -> tuple[ndarray, ndarray]:
+    """
+    load resized image and normalize them, then return the array of images and label
+
+    :param csv_filename:
+    :param base_folder:
+    :return: (ndarray, ndarray)
+    """
     df = _load_csv(csv_filename)
 
-    start_time = datetime.datetime.now()
-    print(r"RGB to Grayscale images")
-    print(f"Start time: {start_time}")
+    # Initialize lists for images and labels
+    images = []
+    labels = []
 
     # Iterate through CSV, load images, and resize them
-    skipped_count = 0
-    processed_count = 0
     for index, row in df.iterrows():
-        path = row['path'].strip()
-        image_path = os.path.join(base_folder, path)
+        image_path = os.path.join(base_folder, row['path'].strip())
         label = row['label']
 
         # Load and preprocess image
         try:
-            save_path = os.path.join(target_folder, path)
-
-            # Check if the file already exists
-            if os.path.exists(save_path):
-                skipped_count += 1
-                print(f"Skipping {save_path} as it already normalized.")
-                continue
-
-            grayscale_image = Image.open(image_path).convert('L')
-
-            # Save the image to the target folder
-            if not os.path.exists(os.path.dirname(save_path)):
-                os.makedirs(os.path.dirname(save_path))
-
-            grayscale_image.save(save_path)
-            processed_count += 1
+            image = Image.open(image_path)
+            normalize_image = np.array(image) / 255.0  # Normalize to [0, 1]
+            images.append(normalize_image)
+            labels.append(label)
         except (IOError, OSError) as e:
-            skipped_count += 1
             print(f"Skipping image {image_path} due to error: {e}")
             continue  # Skip corrupted or unreadable images
 
-    # stop watch log end time
-    end_time = datetime.datetime.now()
-    print(f"End time: {end_time}")
-    print(f"duration: {end_time - start_time}")
-    print(f"processed images: {processed_count}")
-    print(f"skipped images: {skipped_count}")
+    return np.array(images), np.array(labels)
 
+
+def to_grayscale(images: ndarray) -> ndarray:
+    return np.dot(images[..., :3], [0.2989, 0.5870, 0.1140])
+
+def to_histgram(images: ndarray) -> ndarray:
+    hog_features = []
+    for img in images:
+        features = hog(img, pixels_per_cell=(8, 8), cells_per_block=(2, 2), feature_vector=True)
+        hog_features.append(features)
+    return np.array(hog_features)
 
 def _load_csv(csv_filename: str):
     df = pd.read_csv(csv_filename)
