@@ -45,7 +45,7 @@ def resize_and_save(csv_filename: str, base_folder: str, target_folder: str) -> 
             # Check if the file already exists
             if os.path.exists(save_path):
                 skipped_count += 1
-                print(f"Skipping {save_path} as it already normalized.")
+                print(f"Skipping {save_path} as it already resized.")
                 continue
 
             resized_image = Image.open(image_path).convert('RGB').resize((64, 64))
