@@ -1,6 +1,7 @@
 archive
 .idea
 __pycache__
+venv
 
 # macOS files
 .DS_Store
