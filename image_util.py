@@ -28,7 +28,7 @@ def resize_and_save(csv_filename: str, base_folder: str, target_folder: str) -> 
 
     # stop watch log start time
     start_time = datetime.datetime.now()
-    print(r"Normalize images")
+    print(r"Resize images")
     print(f"Start time: {start_time}")
 
     # Iterate through CSV, load images, and resize them
