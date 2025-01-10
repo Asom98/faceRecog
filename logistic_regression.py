@@ -57,7 +57,9 @@ def cross_validate_model(x, y, num_folds=5):
         y_train, y_val = y[train_index], y[val_index]
 
         # Train the model
-        model = LogisticRegression(input_size=x_train.shape[1], num_classes=y_train.shape[1], learning_rate=0.1,
+        model = LogisticRegression(input_size=x_train.shape[1],
+                                   num_classes=y_train.shape[1],
+                                   learning_rate=0.1,
                                    regularization=0.001)
         model.train(x_train, y_train, epochs=1000)
 

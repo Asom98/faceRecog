@@ -102,6 +102,58 @@ def load_and_normalize(csv_filename: str, base_folder: str) -> tuple[ndarray, nd
     return np.array(images), np.array(labels)
 
 
+def load_digits_images(base_folder: str) -> tuple[ndarray, ndarray]:
+    """
+    load resized image and normalize them, then return the array of images and label
+
+    :param base_folder:
+    :return: (ndarray, ndarray)
+    """
+
+    # Initialize lists for images and labels
+    images = []
+    labels = []
+
+    # Iterate through CSV, load images, and resize them
+    # loop from 0 to 9
+    for digit_folder in range(10):
+        # load all files in sub folder and label it
+        label = str(digit_folder)
+        folder = os.path.join(base_folder, label)
+        print(f"Opening folder {folder} ...")
+
+        files = load_all_files_in_folder(folder)
+        for file in files:
+            # Load and preprocess image
+            try:
+                image = Image.open(file)
+                normalize_image = np.array(image) / 255.0  # Normalize to [0, 1]
+                images.append(normalize_image)
+                labels.append(label)
+            except (IOError, OSError) as e:
+                print(f"Skipping image {file} due to error: {e}")
+                continue  # Skip corrupted or unreadable images
+
+    return np.array(images), np.array(labels)
+
+
+def load_all_files_in_folder(folder_path: str):
+    """
+    Load all files in the specified folder.
+
+    Args:
+        folder_path (str): Path to the folder containing files.
+
+    Returns:
+        list: A list of file paths.
+    """
+    file_paths = []
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            file_paths.append(os.path.join(root, file))
+    return file_paths
+
+
 def to_grayscale(images: ndarray) -> ndarray:
     return np.dot(images[..., :3], [0.2989, 0.5870, 0.1140])
 
