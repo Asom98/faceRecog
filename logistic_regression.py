@@ -1,7 +1,7 @@
 # logistic_regression.py
 
 import numpy as np
-
+import pickle5 as pickle
 
 def softmax(z):
     exp_z = np.exp(z - np.max(z, axis=1, keepdims=True))
@@ -43,6 +43,14 @@ class LogisticRegression:
         y_hat = softmax(z)
         return np.argmax(y_hat, axis=1)
 
+    def save_model(self, file_path):
+        with open(file_path, 'wb') as f:
+            pickle.dump(self, f)
+
+    @staticmethod
+    def load_model(file_path):
+        with open(file_path, 'rb') as f:
+            return pickle.load(f)
 
 
 from sklearn.model_selection import KFold

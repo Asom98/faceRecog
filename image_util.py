@@ -176,6 +176,25 @@ def to_norm(features):
     return scaler.fit_transform(features)
 
 
+def pipe_from_folder_to_norm(base_folder: str) -> tuple[any, ndarray]:
+    i1, labels = load_digits_images(base_folder)
+    i2 = to_grayscale(i1)
+    i3 = to_histgram(i2)
+    i4 = to_pca(i3)
+    i5 = to_norm(i4)
+    return i5, labels
+
+def pipe_from_image_to_norm(image_filename: str):
+    image = Image.open(image_filename)
+    image.histogram()
+    i1 = np.array(image) / 255.0  # Normalize to [0, 1]
+    i2 = to_grayscale(i1)
+    i3 = to_histgram(i2)
+    i4 = to_pca(i3)
+    i5 = to_norm(i4)
+    return i5
+
+
 def _load_csv(csv_filename: str):
     df = pd.read_csv(csv_filename)
     # Remove "Ahegao" class if present
